@@ -73,14 +73,18 @@ server-side and is only read inside `/api/recommend.js`.
 
 ### 4. Run locally
 
-For frontend-only development:
-
 ```bash
 npm run dev
 ```
 
-To also run the `/api/recommend` serverless function locally, use
-[Vercel CLI](https://vercel.com/docs/cli):
+The Vite dev server includes a small plugin (see `vite.config.js`) that
+mounts the Vercel serverless function at `/api/recommend` during dev, so
+everything works on one port at `http://localhost:5173` — no Vercel CLI
+needed. Non-`VITE_` env vars (like `ANTHROPIC_API_KEY`) are loaded from
+`.env` into `process.env` for the serverless function.
+
+If you'd rather use the Vercel CLI (e.g. to test Vercel-specific features),
+this also works:
 
 ```bash
 npx vercel dev
