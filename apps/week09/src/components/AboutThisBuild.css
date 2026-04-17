@@ -1,0 +1,33 @@
+.about-build-card {
+  position: relative;
+}
+
+.about-build-card::before {
+  content: '';
+  position: absolute;
+  left: -8px;
+  top: 12px;
+  bottom: 12px;
+  width: 6px;
+  background: #ffd700;
+  border-right: 3px solid #1b2a4a;
+  border-radius: 2px;
+}
+
+.about-build-heading {
+  letter-spacing: 0.15em;
+}
+
+.about-build-subtitle strong {
+  background: #ffd700;
+  padding: 0 6px;
+  border-radius: 4px;
+  color: #1b2a4a;
+}
+
+@media (max-width: 640px) {
+  .about-build-card::before {
+    left: -6px;
+    width: 4px;
+  }
+}

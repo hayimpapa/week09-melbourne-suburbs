@@ -8,8 +8,15 @@ import Step4Around from './steps/Step4Around.jsx';
 import Step5Vibe from './steps/Step5Vibe.jsx';
 import SuburbCard from './components/SuburbCard.jsx';
 import Loading from './components/Loading.jsx';
+import Navbar from './components/Navbar.jsx';
+import AboutThisBuild from './components/AboutThisBuild.jsx';
 import { fetchAllSuburbs } from './lib/supabase.js';
 import { shortlistTop } from './lib/scoring.js';
+
+const TABS = [
+  { id: 'app', label: 'Where Should I Live?' },
+  { id: 'about', label: 'About This Build' },
+];
 
 const STEPS = ['Vibe', 'Crash', 'People', 'Around', 'Dial'];
 
@@ -42,6 +49,7 @@ const DEFAULT_PREFS = {
 };
 
 export default function App() {
+  const [activeTab, setActiveTab] = useState('app');
   const [step, setStep] = useState(0);
   const [direction, setDirection] = useState(1);
   const [prefs, setPrefs] = useState(DEFAULT_PREFS);
@@ -185,7 +193,59 @@ export default function App() {
   }, [step, prefs]);
 
   return (
-    <div className="min-h-screen">
+    <div className="h-screen flex flex-col">
+      <Navbar
+        tabs={TABS}
+        activeTab={activeTab}
+        onTabChange={setActiveTab}
+      />
+
+      <div className="flex-1 min-h-0 overflow-y-auto">
+        {activeTab === 'about' ? (
+          <AboutThisBuild />
+        ) : (
+          <AppView
+            step={step}
+            direction={direction}
+            stepContent={stepContent}
+            STEPS={STEPS}
+            jump={jump}
+            back={back}
+            next={next}
+            isLast={isLast}
+            findMySuburb={findMySuburb}
+            loadingSuburbs={loadingSuburbs}
+            supabaseError={supabaseError}
+            phase={phase}
+            results={results}
+            errorMsg={errorMsg}
+            reset={reset}
+          />
+        )}
+      </div>
+    </div>
+  );
+}
+
+function AppView({
+  step,
+  direction,
+  stepContent,
+  STEPS,
+  jump,
+  back,
+  next,
+  isLast,
+  findMySuburb,
+  loadingSuburbs,
+  supabaseError,
+  phase,
+  results,
+  errorMsg,
+  reset,
+}) {
+  return (
+    <div>
       {/* Header / hero */}
       <header className="border-b-[3px] border-ptv bg-cream relative overflow-hidden">
         <div
