@@ -35,7 +35,7 @@ apps/week09/
 │   └── index.css             # Tailwind + zine component classes
 ├── supabase/
 │   ├── schema.sql            # melbourne_suburbs table + RLS policy
-│   └── seed.sql              # ~60 suburbs of seed data
+│   └── seed.sql              # ~70 suburbs of seed data
 ├── tailwind.config.js
 ├── vite.config.js
 ├── vercel.json
@@ -55,7 +55,7 @@ npm install
 
 1. Create a new Supabase project.
 2. In the SQL editor, run `supabase/schema.sql`.
-3. Then run `supabase/seed.sql` to populate ~60 suburbs.
+3. Then run `supabase/seed.sql` to populate ~70 suburbs.
 4. Grab the project URL and anon key from **Project Settings → API**.
 
 ### 3. Configure environment variables
