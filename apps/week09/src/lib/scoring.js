@@ -23,8 +23,16 @@ export function scoreSuburbs(suburbs, prefs) {
       const hills = norm10(s.hills_score);
       // Higher reward when suburb's strength matches the slider direction.
       const beachHillsMatch = (1 - bvh) * beach + bvh * hills;
-      score += beachHillsMatch * 12;
-      maxScore += 12;
+      score += beachHillsMatch * 16;
+      maxScore += 16;
+      // Slider intensity: 0 at neutral (0.5), 1 at either extreme.
+      // The further the user pushes the slider, the more we punish suburbs
+      // that score nothing on the side they actually want — otherwise a
+      // "definitely the beach" pick can still surface 0/10-beach suburbs
+      // when budget/cafe/etc. tip the balance.
+      const bvhIntensity = Math.abs(0.5 - bvh) * 2;
+      const desiredAxisScore = bvh < 0.5 ? beach : hills;
+      score -= bvhIntensity * (1 - desiredAxisScore) * 14;
       if (beachHillsMatch > 0.7) {
         reasons.push(bvh < 0.5 ? 'great beach access' : 'leafy hills feel');
       }
