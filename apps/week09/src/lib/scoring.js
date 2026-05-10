@@ -41,8 +41,13 @@ export function scoreSuburbs(suburbs, prefs) {
       const cityCloseness = inv(Math.min(s.cbd_distance_km, 60) / 60); // 1=close
       const cityWant = inv(prefs.cityProximity); // 1=wants close
       const cityMatch = 1 - Math.abs(cityCloseness - cityWant);
-      score += cityMatch * 10;
-      maxScore += 10;
+      score += cityMatch * 12;
+      maxScore += 12;
+      // Same idea as beachVsHills: when the user pushes the slider to an
+      // extreme, punish suburbs on the opposite end so we don't sell a
+      // 24km bayside spot to someone who said "way out".
+      const cityIntensity = Math.abs(0.5 - prefs.cityProximity) * 2;
+      score -= cityIntensity * (1 - cityMatch) * 10;
 
       // Star scales (1..5) -> 0..1
       const star = (n) => (n - 1) / 4;

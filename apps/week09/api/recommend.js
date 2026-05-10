@@ -20,7 +20,11 @@ Your job: given a user's preferences and 5 candidate suburbs (already pre-scored
 - a one-line tagline (max 12 words, witty and Melbourne-specific)
 - a 2–3 sentence explanation that references the user's actual preferences and the suburb's vibe
 
-Use Australian-Melbourne slang sparingly but naturally ("reckon", "tho", "yeah nah", "carn"). Don't be cringe. Don't insult anyone's home. Be honest if a match isn't perfect.
+Use Australian-Melbourne slang sparingly but naturally ("reckon", "tho", "yeah nah", "carn"). Don't be cringe. Don't insult anyone's home.
+
+Honesty rules — these matter:
+- Read the "User wants" summary carefully. If a suburb pulls in the opposite direction of something the user explicitly asked for (e.g. user wants to live far from the CBD but the suburb is close), call it out — never reframe a mismatch as a positive.
+- Never invent specifics that aren't in the data. The data only gives you a transport score, not what mode it is — say "decent public transport" rather than naming trams, trains, or specific lines unless you're certain.
 
 CRITICAL: Respond with ONLY a JSON object matching this exact schema, no preamble, no markdown fence:
 
@@ -33,8 +37,51 @@ CRITICAL: Respond with ONLY a JSON object matching this exact schema, no preambl
 
 Use the suburb names exactly as given in the candidates list.`;
 
+// Translate the raw 0..1 sliders / star ratings into plain English so the
+// model doesn't get tripped up by misleading variable names like
+// `cityProximity` (where 1 actually means "far away").
+function summarisePreferences(p) {
+  const lines = [];
+  const slider = (v, lowLabel, midLabel, highLabel) => {
+    if (v <= 0.15) return `definitely ${lowLabel}`;
+    if (v < 0.4) return `leaning ${lowLabel}`;
+    if (v <= 0.6) return midLabel;
+    if (v < 0.85) return `leaning ${highLabel}`;
+    return `definitely ${highLabel}`;
+  };
+  const star = (n, label) => {
+    if (n <= 1) return `doesn't care about ${label}`;
+    if (n === 2) return `mildly interested in ${label}`;
+    if (n === 3) return `medium interest in ${label}`;
+    if (n === 4) return `cares a lot about ${label}`;
+    return `obsessed with ${label}`;
+  };
+
+  lines.push(`Beach vs hills: ${slider(p.beachVsHills, 'the beach', 'either is fine', 'the hills')}`);
+  lines.push(`Distance from CBD: ${slider(p.cityProximity, 'wants to be in the city', "doesn't mind either way", 'wants to live far away from the CBD')}`);
+  lines.push(`Nightlife: ${star(p.nightlife, 'nightlife and bars')}`);
+  lines.push(`Cafés: ${star(p.cafe, 'café culture')}`);
+  lines.push(`Green space: ${star(p.greenSpace, 'parks and green space')}`);
+  lines.push(`Property type: ${p.propertyType === 'any' ? 'no preference' : p.propertyType}`);
+  lines.push(`Budget: $${p.budget.toLocaleString()} median house price`);
+  lines.push(`New estate vs established: ${p.newEstate}`);
+  if (p.cultures?.length) lines.push(`Cultural communities they want: ${p.cultures.join(', ')}`);
+  lines.push(`Life stage: ${slider(p.lifeStage, 'young & single', 'family-stage', 'retiree')}`);
+  if (p.retireeFriendly) lines.push('Retiree-friendly priorities: ON (walkability + transport bumped)');
+  lines.push(`Public transport: ${star(p.transport, 'public transport')}`);
+  lines.push(`School quality: ${star(p.school, 'school quality')}`);
+  lines.push(`Walkability: ${star(p.walkability, 'walkability')}`);
+  lines.push(`Commute tolerance: ${slider(p.commuteTolerance, 'hates commuting', 'tolerates a commute', 'happy with a long commute')}`);
+  lines.push(`Bogan tolerance: ${slider(p.boganTolerance, 'no bogans please', 'fine with some', 'bring the bogans')}`);
+  lines.push(`Hipster tolerance: ${slider(p.hipsterTolerance, 'no hipsters please', 'fine with some', 'more tote bags please')}`);
+  lines.push(`Neighbour judgment sensitivity: ${slider(p.judgmentSensitivity, "doesn't care", 'a bit', 'really cares')}`);
+  if (p.aflCulture) lines.push('AFL culture: wants it');
+  if (p.dogOwner) lines.push('Dog owner: yes (dog-friendliness matters)');
+  return lines.map((l) => `- ${l}`).join('\n');
+}
+
 function buildUserPrompt(preferences, candidates) {
-  const prefs = JSON.stringify(preferences, null, 2);
+  const prefs = summarisePreferences(preferences);
   const cands = candidates
     .map(
       (c, i) => `Candidate ${i + 1}: ${c.name} (${c.region})
@@ -53,7 +100,7 @@ function buildUserPrompt(preferences, candidates) {
     )
     .join('\n\n');
 
-  return `User preferences:
+  return `User wants:
 ${prefs}
 
 Candidate suburbs (already shortlisted by an algorithm — feel free to re-rank):
